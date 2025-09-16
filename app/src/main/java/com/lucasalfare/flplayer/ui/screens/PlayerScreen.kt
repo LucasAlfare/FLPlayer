@@ -1,5 +1,6 @@
 package com.lucasalfare.flplayer.ui.screens
 
+import android.app.Activity
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import androidx.compose.animation.AnimatedVisibility
@@ -17,6 +18,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -30,6 +32,9 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.media3.ui.PlayerView
 import com.lucasalfare.flplayer.ui.LocalAppViewModel
 import com.lucasalfare.flplayer.ui.viewmodels.AppMediaItem
@@ -44,6 +49,8 @@ fun PlayerScreen(playerVm: ExoPlayerViewModel) {
   val items = appVm.items.value
   if (items.isEmpty()) return
 
+  val window = (context as Activity).window
+
   var controlsVisible by remember { mutableStateOf(true) }
 
   LaunchedEffect(playerVm.exoPlayer) {
@@ -56,6 +63,18 @@ fun PlayerScreen(playerVm: ExoPlayerViewModel) {
     if (controlsVisible) {
       delay(3000)
       controlsVisible = false
+    }
+  }
+
+  DisposableEffect(Unit) {
+    WindowCompat.setDecorFitsSystemWindows(window, false)
+    val controller = WindowInsetsControllerCompat(window, window.decorView)
+    controller.hide(WindowInsetsCompat.Type.systemBars())
+    controller.systemBarsBehavior =
+      WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+    onDispose {
+      WindowCompat.setDecorFitsSystemWindows(window, true)
+      controller.show(WindowInsetsCompat.Type.systemBars())
     }
   }
 
