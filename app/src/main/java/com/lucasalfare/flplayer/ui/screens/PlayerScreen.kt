@@ -71,6 +71,7 @@ fun PlayerScreen(playerVm: ExoPlayerViewModel) {
         PlayerView(ctx).apply {
           player = playerVm.exoPlayer
           useController = false
+          keepScreenOn = true
           layoutParams = ViewGroup.LayoutParams(MATCH_PARENT, MATCH_PARENT)
         }
       },
