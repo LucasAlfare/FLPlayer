@@ -40,7 +40,6 @@ class ExoPlayerViewModel(app: Application) : AndroidViewModel(app) {
             exoPlayer.seekToDefaultPosition(_currentIndex.intValue)
             exoPlayer.play()
           } else {
-            exoPlayer.seekTo(0)
             _isPlaying.value = false
           }
         }
