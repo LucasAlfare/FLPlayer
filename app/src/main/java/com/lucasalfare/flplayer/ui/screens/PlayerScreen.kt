@@ -4,7 +4,8 @@ import android.app.Activity
 import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.foundation.background
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,10 +13,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -26,10 +36,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
@@ -97,12 +107,13 @@ fun PlayerScreen(playerVm: ExoPlayerViewModel) {
       modifier = Modifier.fillMaxSize()
     )
 
-    PlayerControls(
-      playerVm = playerVm,
-      items = items,
-      controlsVisible = controlsVisible,
-      onToggleControls = { controlsVisible = !controlsVisible }
-    )
+    Box(modifier = Modifier.align(Alignment.BottomCenter)) {
+      PlayerControls(
+        playerVm = playerVm,
+        items = items,
+        controlsVisible = controlsVisible
+      )
+    }
   }
 }
 
@@ -110,46 +121,56 @@ fun PlayerScreen(playerVm: ExoPlayerViewModel) {
 fun PlayerControls(
   playerVm: ExoPlayerViewModel,
   items: List<AppMediaItem>,
-  controlsVisible: Boolean,
-  onToggleControls: () -> Unit
+  controlsVisible: Boolean
 ) {
-  Box(modifier = Modifier.fillMaxSize()) {
-    AnimatedVisibility(
-      visible = controlsVisible,
-      modifier = Modifier
-        .align(Alignment.BottomCenter)
-        .fillMaxWidth()
-        .padding(8.dp)
-        .clip(RoundedCornerShape(10.dp))
-        .background(Color.LightGray.copy(alpha = .3f))
+  AnimatedVisibility(
+    visible = controlsVisible,
+    enter = fadeIn(),
+    exit = fadeOut(),
+    modifier = Modifier
+      .fillMaxWidth()
+      .padding(16.dp)
+  ) {
+    Column(
+      horizontalAlignment = Alignment.CenterHorizontally
     ) {
-      Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
+      Text(
+        items.getOrNull(playerVm.currentIndex.intValue)?.name ?: "",
+        color = Color.White,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis
+      )
+      Slider(
+        value = playerVm.sliderPosition.floatValue,
+        onValueChange = { playerVm.seekTo(it) },
+        colors = SliderDefaults.colors(
+          thumbColor = Color.White,
+          activeTrackColor = Color.White.copy(alpha = 0.7f),
+          inactiveTrackColor = Color.White.copy(alpha = 0.3f)
+        ),
+        modifier = Modifier.height(4.dp)
+      )
+      Row(
+        horizontalArrangement = Arrangement.SpaceEvenly,
+        modifier = Modifier.fillMaxWidth()
       ) {
-        Text(
-          items.getOrNull(playerVm.currentIndex.intValue)?.name ?: "Unknown"
-        )
-        Slider(
-          value = playerVm.sliderPosition.floatValue,
-          onValueChange = { playerVm.seekTo(it) },
-          onValueChangeFinished = { /* já tratado em seekTo */ }
-        )
-        Row {
-          Button(
-            onClick = { playerVm.skipPrevious() },
-            enabled = playerVm.currentIndex.intValue > 0
-          ) { Text("<-") }
+        IconButton(
+          onClick = { playerVm.skipPrevious() },
+          enabled = playerVm.currentIndex.intValue > 0
+        ) { Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null, tint = Color.White) }
 
-          Button(onClick = { playerVm.togglePlayPause() }) {
-            Text(if (playerVm.isPlaying.value) "Pause" else "Play")
-          }
-
-          Button(
-            onClick = { playerVm.skipNext() },
-            enabled = playerVm.currentIndex.intValue < items.lastIndex
-          ) { Text("->") }
+        IconButton(onClick = { playerVm.togglePlayPause() }) {
+          Icon(
+            if (playerVm.isPlaying.value) Icons.Default.MoreVert else Icons.Default.PlayArrow,
+            contentDescription = null,
+            tint = Color.White
+          )
         }
+
+        IconButton(
+          onClick = { playerVm.skipNext() },
+          enabled = playerVm.currentIndex.intValue < items.lastIndex
+        ) { Icon(Icons.AutoMirrored.Filled.ArrowForward, contentDescription = null, tint = Color.White) }
       }
     }
   }
